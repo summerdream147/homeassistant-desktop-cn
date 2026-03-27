@@ -1,5 +1,12 @@
 # Home Assistant 桌面版 - 汉化版
 
+## 语言版本
+
+- [中文
+- [English README](README_EN.md)
+
+---
+
 这是一个经过汉化和 Windows 端优化的 Home Assistant 桌面客户端。
 
 ## 功能特性

@@ -53,3 +53,10 @@ This project is based on [iprodanovbg/homeassistant-desktop](https://github.com/
 ## License
 
 Apache License 2.0
+
+---
+
+## Language Versions
+
+- [Chinese README](README.md)
+- [English README](README_EN.md) (This file)

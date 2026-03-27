@@ -1,6 +1,7 @@
 html,
 body {
-  font-family: Roboto, sans-serif;
+  /* 汉化优化：添加中文字体支持 */
+  font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "WenQuanYi Micro Hei", Roboto, sans-serif;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   font-weight: 400;
@@ -8,6 +9,8 @@ body {
   padding: 0;
   height: 100%;
   width: 100%;
+  background-color: #1c1c1c;
+  color: #ffffff;
 }
 
 .container {
@@ -45,14 +48,8 @@ body {
   color: rgb(var(--pure-material-onprimary-rgb, 255, 255, 255));
   background-color: rgb(var(--pure-material-primary-rgb, 3, 169, 244));
   box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
-  font-family: var(
-    --pure-material-font,
-    "Roboto",
-    "Segoe UI",
-    BlinkMacSystemFont,
-    system-ui,
-    -apple-system
-  );
+  /* 汉化优化：添加中文字体支持 */
+  font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "WenQuanYi Micro Hei", "Roboto", "Segoe UI", BlinkMacSystemFont, system-ui, -apple-system;
   font-size: 16px;
   font-weight: 600;
   line-height: 36px;
@@ -193,6 +190,7 @@ input {
   border: none;
   border-radius: 0;
   border-bottom: 1px solid #d5d5d5;
+  color: #ffffff;
 }
 
 input:focus {
@@ -215,7 +213,7 @@ input:not(:focus)::placeholder {
 }
 
 label {
-  color: #d5d5d5;
+  color: #999999;
   font-size: 16px;
   font-weight: normal;
   position: absolute;

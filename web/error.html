@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <title>Home Assistant</title>
   <meta charset="utf-8"/>
@@ -8,6 +8,32 @@
   <link href="assets/error.css" rel="stylesheet"/>
   <script>
     const { ipcRenderer } = require('electron');
+
+    const i18n = {
+      zh: {
+        message: '无法连接到 Home Assistant 实例，请检查您的网络连接。',
+        reconnect: '重新连接',
+        restart: '重启应用'
+      },
+      en: {
+        message: 'Home Assistant instance is not available, please check your connection.',
+        reconnect: 'Reconnect',
+        restart: 'Restart'
+      }
+    };
+
+    function updateLanguage(lang) {
+      const t = i18n[lang];
+      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+      document.querySelector('.error').textContent = t.message;
+      document.querySelector('button[onclick="reconnect()"]').textContent = t.reconnect;
+      document.querySelector('button[onclick="restart()"]').textContent = t.restart;
+    }
+
+    ipcRenderer.send('get-language');
+    ipcRenderer.on('get-language', (event, lang) => {
+      updateLanguage(lang);
+    });
 
     function reconnect() {
       ipcRenderer.send('reconnect');
@@ -33,12 +59,12 @@
     </div>
     <div class="center">
       <p class="error">
-        Home Assistant instance is not available, please check your connection.
+        无法连接到 Home Assistant 实例，请检查您的网络连接。
       </p>
     </div>
     <div class="center">
-      <button class="pure-material-button-contained" onclick="reconnect()">Reconnect</button>
-      <button class="pure-material-button-contained" onclick="restart()" style="margin-left: 10px">Restart</button>
+      <button class="pure-material-button-contained" onclick="reconnect()">重新连接</button>
+      <button class="pure-material-button-contained" onclick="restart()" style="margin-left: 10px">重启应用</button>
     </div>
   </div>
 </div>

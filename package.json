@@ -1,12 +1,12 @@
 {
-  "name": "homeassistant-desktop",
+  "name": "homeassistant-desktop-cn",
   "repository": {
     "type": "git",
     "url": "https://github.com/iprodanovbg/homeassistant-desktop"
   },
-  "version": "1.5.3",
-  "description": "Desktop App (Windows / macOS / Linux) for Home Assistant built with Electron",
-  "author": "Ivan Prodanov",
+  "version": "1.5.3-cn",
+  "description": "Home Assistant 桌面版 - 汉化优化版 (Windows / macOS / Linux)",
+  "author": "Ivan Prodanov (汉化优化版)",
   "license": "Apache-2.0",
   "main": "app.js",
   "scripts": {
@@ -24,8 +24,7 @@
     "bonjour-service": "^1.0.14",
     "electron-log": "^4.4.8",
     "electron-store": "^8.1.0",
-    "electron-traywindow-positioner": "^1.1.1",
-    "electron-updater": "^4.6.5"
+    "electron-traywindow-positioner": "^1.1.1"
   },
   "devDependencies": {
     "electron": "21.2.0",

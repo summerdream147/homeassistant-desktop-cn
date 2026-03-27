@@ -2,7 +2,7 @@ const Store = require('electron-store');
 
 module.exports = new Store({
   defaults: {
-    autoUpdate: true,
+    language: 'zh',
     automaticSwitching: true,
     detachedMode: false,
     disableHover: false,

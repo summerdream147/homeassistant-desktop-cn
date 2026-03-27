@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
   <title>Home Assistant</title>
@@ -11,6 +11,42 @@
     const { ipcRenderer } = require('electron');
     const Bonjour = require('bonjour-service');
     const bonjour = new Bonjour.Bonjour();
+
+    const i18n = {
+      zh: {
+        title: 'Home Assistant 桌面版',
+        availableInstances: '发现的实例：',
+        urlChecked: 'URL 验证成功，正在自动跳转到 Home Assistant...',
+        urlPlaceholder: '例如：http://homeassistant.local:8123',
+        urlLabel: 'Home Assistant 地址',
+        urlInvalid: '请输入有效的 URL 地址',
+        submit: '连接'
+      },
+      en: {
+        title: 'Home Assistant Desktop',
+        availableInstances: 'Available Instances:',
+        urlChecked: 'Your URL is checked, and you will be forwarded to Home Assistant automatically.',
+        urlPlaceholder: 'e.g. http://homeassistant.local:8123',
+        urlLabel: 'Home Assistant URL',
+        urlInvalid: 'Please provide a valid url.',
+        submit: 'Submit'
+      }
+    };
+
+    let currentLang = 'zh';
+
+    function updateLanguage(lang) {
+      currentLang = lang;
+      const t = i18n[lang];
+      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+      document.querySelector('.header').innerHTML = `<img src="assets/favicon.png" height="52"/> ${t.title}`;
+      document.querySelector('#availableInstancesContainer p').textContent = t.availableInstances;
+      document.querySelector('#check-wrapper small').textContent = t.urlChecked;
+      document.getElementById('url').placeholder = t.urlPlaceholder;
+      document.querySelector('label[for="url"]').textContent = t.urlLabel;
+      document.querySelector('.invalid-feedback').textContent = t.urlInvalid;
+      document.getElementById('submit').textContent = t.submit;
+    }
 
     function showInstance(url) {
       if (url === '') {
@@ -27,6 +63,11 @@
 
     document.addEventListener('DOMContentLoaded', function () {
       setTimeout(() => document.getElementById('url').focus(), 300);
+    });
+
+    ipcRenderer.send('get-language');
+    ipcRenderer.on('get-language', (event, lang) => {
+      updateLanguage(lang);
     });
 
     ipcRenderer.send('get-instances');
@@ -125,11 +166,11 @@
 <div class="container">
   <div class="content">
     <div class="center header">
-      <img src="assets/favicon.png" height="52"/> Home Assistant
+      <img src="assets/favicon.png" height="52"/> Home Assistant 桌面版
     </div>
     <div id="availableInstancesContainer" style="display:none;">
       <div class="center">
-        <p>Available Instances: </p>
+        <p>发现的实例：</p>
       </div>
       <div class="center">
         <div id="availableInstances">
@@ -148,17 +189,17 @@
           <div class="icon-fix"></div>
         </div>
         <p>
-          <small class="grey">Your URL is checked, and you will be forwarded to Home Assistant automatically.</small>
+          <small class="grey">URL 验证成功，正在自动跳转到 Home Assistant...</small>
         </p>
       </div>
 
       <div id="url-wrapper" class="group">
-        <input type="url" required="required" id="url" placeholder="e.g. http://homeassistant.local:8123" onkeyup="checkUrl()" />
+        <input type="url" required="required" id="url" placeholder="例如：http://homeassistant.local:8123" onkeyup="checkUrl()" />
         <span class="highlight"></span>
         <span class="bar"></span>
-        <label for="url">Home Assistant URL</label>
-        <div class="invalid-feedback">Please provide a valid url.</div>
-        <button class="pure-material-button-contained" id="submit" onclick="saveInstance()" disabled>Submit</button>
+        <label for="url">Home Assistant 地址</label>
+        <div class="invalid-feedback">请输入有效的 URL 地址</div>
+        <button class="pure-material-button-contained" id="submit" onclick="saveInstance()" disabled>连接</button>
       </div>
     </div>
   </div>

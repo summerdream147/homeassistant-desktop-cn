@@ -10,20 +10,21 @@ const {
   Tray,
   BrowserWindow,
 } = require('electron');
-const { autoUpdater } = require('electron-updater');
 const AutoLaunch = require('auto-launch');
 const Positioner = require('electron-traywindow-positioner');
 const Bonjour = require('bonjour-service');
 const bonjour = new Bonjour.Bonjour();
 const logger = require('electron-log');
 const config = require('./config');
-const updateUrl = `https://update.iprodanov.com/files`;
+const { getLang } = require('./i18n');
 
-autoUpdater.logger = logger;
-autoUpdater.setFeedURL({
-  provider: 'generic',
-  url: updateUrl,
-});
+// Windows 平台优化：解决 GPU 初始化问题
+if (process.platform === 'win32') {
+  app.commandLine.appendSwitch('disable-gpu-sandbox');
+  app.commandLine.appendSwitch('use-angle', 'default');
+  app.disableHardwareAcceleration();
+}
+
 logger.catchErrors();
 logger.info(`${app.name} started`);
 logger.info(`Platform: ${process.platform} ${process.arch}`);
@@ -44,7 +45,6 @@ let forceQuit = false;
 let resizeEvent = false;
 let mainWindow;
 let tray;
-let updateCheckerInterval;
 let availabilityCheckerInterval;
 
 function registerKeyboardShortcut() {
@@ -59,34 +59,6 @@ function registerKeyboardShortcut() {
 
 function unregisterKeyboardShortcut() {
   globalShortcut.unregisterAll();
-}
-
-async function useAutoUpdater() {
-  autoUpdater.on('error', async (message) => {
-    logger.error('There was a problem updating the application');
-    logger.error(message);
-    clearInterval(updateCheckerInterval);
-  });
-
-  autoUpdater.on('update-downloaded', () => {
-    forceQuit = true;
-    autoUpdater.quitAndInstall();
-  });
-
-  if (!updateCheckerInterval && config.get('autoUpdate')) {
-    updateCheckerInterval = setInterval(checkForUpdates, 1000 * 60 * 60 * 4);
-  }
-
-  await checkForUpdates();
-}
-
-async function checkForUpdates() {
-  try {
-    await autoUpdater.checkForUpdates();
-  } catch (error) {
-    logger.error(error);
-    clearInterval(updateCheckerInterval);
-  }
 }
 
 function checkAutoStart() {
@@ -135,11 +107,15 @@ function availabilityCheck() {
 function changePosition() {
   const trayBounds = tray.getBounds();
   const windowBounds = mainWindow.getBounds();
-  const displayWorkArea = screen.getDisplayNearestPoint({
+  const display = screen.getDisplayNearestPoint({
     x: trayBounds.x,
     y: trayBounds.y,
-  }).workArea;
+  });
+  const displayWorkArea = display.workArea;
   const taskBarPosition = Positioner.getTaskbarPosition(trayBounds);
+
+  // Windows 平台优化：添加边距避免窗口贴边
+  const margin = process.platform === 'win32' ? 8 : 0;
 
   if (taskBarPosition === 'top' || taskBarPosition === 'bottom') {
     const alignment = {
@@ -153,8 +129,8 @@ function changePosition() {
       const { y } = Positioner.calculate(mainWindow.getBounds(), trayBounds, alignment);
 
       mainWindow.setPosition(
-        displayWorkArea.width - windowBounds.width + displayWorkArea.x,
-        y + (taskBarPosition === 'bottom' && displayWorkArea.y),
+        displayWorkArea.width - windowBounds.width + displayWorkArea.x - margin,
+        y + (taskBarPosition === 'bottom' ? displayWorkArea.y : 0) + (taskBarPosition === 'top' ? margin : 0),
         false,
       );
     }
@@ -166,10 +142,17 @@ function changePosition() {
 
     if (trayBounds.y + (trayBounds.height + windowBounds.height) / 2 < displayWorkArea.height) {
       const { x, y } = Positioner.calculate(mainWindow.getBounds(), trayBounds, alignment);
-      mainWindow.setPosition(x + (taskBarPosition === 'right' && displayWorkArea.x), y);
+      mainWindow.setPosition(
+        x + (taskBarPosition === 'right' ? displayWorkArea.x : 0) + (taskBarPosition === 'left' ? margin : 0),
+        y
+      );
     } else {
       const { x } = Positioner.calculate(mainWindow.getBounds(), trayBounds, alignment);
-      mainWindow.setPosition(x, displayWorkArea.y + displayWorkArea.height - windowBounds.height, false);
+      mainWindow.setPosition(
+        x + (taskBarPosition === 'right' ? 0 : margin),
+        displayWorkArea.y + displayWorkArea.height - windowBounds.height - margin,
+        false
+      );
     }
   }
 }
@@ -209,9 +192,12 @@ function checkForAvailableInstance() {
 }
 
 function getMenu() {
+  const lang = getLang(config.get('language'));
+  const t = lang.menu;
+
   let instancesMenu = [
     {
-      label: 'Open in Browser',
+      label: t.openInBrowser,
       enabled: currentInstance(),
       click: async () => {
         await shell.openExternal(currentInstance());
@@ -243,7 +229,7 @@ function getMenu() {
         type: 'separator',
       },
       {
-        label: 'Add another Instance...',
+        label: t.addInstance,
         click: async () => {
           config.delete('currentInstance');
           await mainWindow.loadURL(indexFile);
@@ -251,7 +237,7 @@ function getMenu() {
         },
       },
       {
-        label: 'Automatic Switching',
+        label: t.autoSwitching,
         type: 'checkbox',
         enabled: config.has('allInstances') && config.get('allInstances').length > 1,
         checked: config.get('automaticSwitching'),
@@ -261,12 +247,12 @@ function getMenu() {
       },
     );
   } else {
-    instancesMenu.push({ label: 'Not Connected...', enabled: false });
+    instancesMenu.push({ label: t.notConnected, enabled: false });
   }
 
   return Menu.buildFromTemplate([
     {
-      label: 'Show/Hide Window',
+      label: t.showHideWindow,
       visible: process.platform === 'linux',
       click: () => {
         if (mainWindow.isVisible()) {
@@ -285,7 +271,7 @@ function getMenu() {
       type: 'separator',
     },
     {
-      label: 'Hover to Show',
+      label: t.hoverToShow,
       visible: process.platform !== 'linux' && !config.get('detachedMode'),
       enabled: !config.get('detachedMode'),
       type: 'checkbox',
@@ -295,7 +281,7 @@ function getMenu() {
       },
     },
     {
-      label: 'Stay on Top',
+      label: t.stayOnTop,
       type: 'checkbox',
       checked: config.get('stayOnTop'),
       click: () => {
@@ -308,7 +294,7 @@ function getMenu() {
       },
     },
     {
-      label: 'Start at Login',
+      label: t.startAtLogin,
       type: 'checkbox',
       checked: autostartEnabled,
       click: () => {
@@ -322,7 +308,7 @@ function getMenu() {
       },
     },
     {
-      label: 'Enable Shortcut',
+      label: t.enableShortcut,
       type: 'checkbox',
       accelerator: 'CommandOrControl+Alt+X',
       checked: config.get('shortcutEnabled'),
@@ -340,7 +326,7 @@ function getMenu() {
       type: 'separator',
     },
     {
-      label: 'Use detached Window',
+      label: t.detachedWindow,
       type: 'checkbox',
       checked: config.get('detachedMode'),
       click: async () => {
@@ -350,7 +336,7 @@ function getMenu() {
       },
     },
     {
-      label: 'Use Fullscreen',
+      label: t.fullscreen,
       type: 'checkbox',
       checked: config.get('fullScreen'),
       accelerator: 'CommandOrControl+Alt+Return',
@@ -362,27 +348,34 @@ function getMenu() {
       type: 'separator',
     },
     {
-      label: `v${app.getVersion()}`,
+      label: `${t.version} v${app.getVersion()}`,
       enabled: false,
     },
     {
-      label: 'Automatic Updates',
-      type: 'checkbox',
-      checked: config.get('autoUpdate'),
-      click: async () => {
-        const currentStatus = config.get('autoUpdate');
-        config.set('autoUpdate', !currentStatus);
-
-        if (currentStatus) {
-          clearInterval(updateCheckerInterval);
-          updateCheckerInterval = null;
-        } else {
-          await useAutoUpdater();
-        }
-      },
+      label: t.language,
+      submenu: [
+        {
+          label: t.chinese,
+          type: 'checkbox',
+          checked: config.get('language') === 'zh',
+          click: () => {
+            config.set('language', 'zh');
+            updateTrayTooltip();
+          },
+        },
+        {
+          label: t.english,
+          type: 'checkbox',
+          checked: config.get('language') === 'en',
+          click: () => {
+            config.set('language', 'en');
+            updateTrayTooltip();
+          },
+        },
+      ],
     },
     {
-      label: 'Open on github.com',
+      label: t.viewOnGithub,
       click: async () => {
         await shell.openExternal('https://github.com/iprodanovbg/homeassistant-desktop');
       },
@@ -391,19 +384,20 @@ function getMenu() {
       type: 'separator',
     },
     {
-      label: 'Restart Application',
+      label: t.restart,
       click: () => {
         app.relaunch();
         app.exit();
       },
     },
     {
-      label: '⚠️ Reset Application',
+      label: t.reset,
       click: () => {
+        const d = lang.dialog;
         dialog
           .showMessageBox({
-            message: 'Are you sure you want to reset Home Assistant Desktop?',
-            buttons: ['Reset Everything!', 'Reset Windows', 'Cancel'],
+            message: d.resetTitle,
+            buttons: [d.resetAll, d.resetWindows, d.cancel],
           })
           .then(async (res) => {
             if (res.response !== 2) {
@@ -429,7 +423,7 @@ function getMenu() {
       type: 'separator',
     },
     {
-      label: 'Quit',
+      label: t.quit,
       click: () => {
         forceQuit = true;
         app.quit();
@@ -440,18 +434,28 @@ function getMenu() {
 
 async function createMainWindow(show = false) {
   logger.info('Initialized main window');
+
+  // Windows 平台优化：设置更合适的默认窗口尺寸
+  const isWindows = process.platform === 'win32';
+  const defaultWidth = isWindows ? 480 : 420;
+  const defaultHeight = isWindows ? 520 : 460;
+
   mainWindow = new BrowserWindow({
-    width: 420,
-    height: 460,
-    minWidth: 420,
-    minHeight: 460,
+    width: defaultWidth,
+    height: defaultHeight,
+    minWidth: 400,
+    minHeight: 400,
     show: false,
     skipTaskbar: !show,
     autoHideMenuBar: true,
     frame: config.get('detachedMode') && process.platform !== 'darwin',
+    // Windows 平台优化：禁用原生窗口动画以获得更流畅的体验
+    backgroundColor: '#1c1c1c',
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      // Windows 平台优化：启用硬件加速
+      offscreen: false,
     },
   });
 
@@ -580,15 +584,26 @@ function showWindow() {
   }
 }
 
+function updateTrayTooltip() {
+  if (tray) {
+    const lang = getLang(config.get('language'));
+    tray.setToolTip(lang.tray.tooltip);
+  }
+}
+
 function createTray() {
   if (tray instanceof Tray) {
     return;
   }
 
   logger.info('Initialized Tray menu');
-  tray = new Tray(
-    ['win32', 'linux'].includes(process.platform) ? `${__dirname}/assets/IconWin.png` : `${__dirname}/assets/IconTemplate.png`,
-  );
+
+  const isWindows = process.platform === 'win32';
+  const iconPath = isWindows ? `${__dirname}/assets/IconWin.png` : `${__dirname}/assets/IconTemplate.png`;
+
+  tray = new Tray(iconPath);
+
+  updateTrayTooltip();
 
   tray.on('click', () => {
     if (mainWindow.isVisible()) {
@@ -601,6 +616,13 @@ function createTray() {
       showWindow();
     }
   });
+
+  // Windows 平台优化：双击托盘图标打开窗口
+  if (isWindows) {
+    tray.on('double-click', () => {
+      showWindow();
+    });
+  }
 
   tray.on('right-click', () => {
     if (!config.get('detachedMode')) {
@@ -716,7 +738,25 @@ async function showError(isError) {
 }
 
 app.whenReady().then(async () => {
-  await useAutoUpdater();
+  // Windows 平台优化：请求单实例锁
+  const gotTheLock = app.requestSingleInstanceLock();
+
+  if (!gotTheLock) {
+    logger.info('Another instance is already running, quitting...');
+    app.quit();
+    return;
+  }
+
+  // Windows 平台优化：当尝试运行第二个实例时，聚焦到第一个实例
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    logger.info('Second instance detected, focusing main window');
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      showWindow();
+      mainWindow.focus();
+    }
+  });
+
   checkAutoStart();
 
   await createMainWindow(!config.has('currentInstance'));
@@ -744,9 +784,9 @@ app.whenReady().then(async () => {
     config.set('disableHover', true);
   }
 
-  // enable auto update by default
-  if (!config.has('autoUpdate')) {
-    config.set('autoUpdate', true);
+  // Windows 平台优化：设置应用用户模型ID（用于任务栏固定）
+  if (process.platform === 'win32') {
+    app.setAppUserModelId('com.homeassistant.desktop.cn');
   }
 });
 
@@ -762,6 +802,10 @@ app.on('window-all-closed', () => {
 
 ipcMain.on('get-instances', (event) => {
   event.reply('get-instances', config.get('allInstances') || []);
+});
+
+ipcMain.on('get-language', (event) => {
+  event.reply('get-language', config.get('language'));
 });
 
 ipcMain.on('ha-instance', (event, url) => {

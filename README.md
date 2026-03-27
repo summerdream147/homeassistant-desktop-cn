@@ -1,4 +1,4 @@
-# Home Assistant 桌面版 - 汉化版
+# Home Assistant Desktop - 汉化版
 
 中文/[English](README_EN.md)
 
@@ -24,24 +24,7 @@
 ## 快捷键
 
 - `Ctrl + Alt + X` - 显示/隐藏窗口
-- `Ctrl + Alt + 回车` - 全屏模式切换
-
-## 使用方法
-
-1. 安装依赖：
-```bash
-npm install
-```
-
-2. 运行开发模式：
-```bash
-npm start
-```
-
-3. 构建 Windows 版本：
-```bash
-npm run build-local-win
-```
+- `Ctrl + Alt + Enter` - 全屏模式
 
 ## 系统要求
 

@@ -28,23 +28,6 @@ This is a Chinese localized and Windows-optimized Home Assistant desktop client.
 - `Ctrl + Alt + X` - Show/Hide window
 - `Ctrl + Alt + Enter` - Toggle fullscreen mode
 
-## Usage
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Run development mode:
-```bash
-npm start
-```
-
-3. Build Windows version:
-```bash
-npm run build-local-win
-```
-
 ## System Requirements
 
 - Windows 10/11

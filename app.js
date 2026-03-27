@@ -377,7 +377,7 @@ function getMenu() {
     {
       label: t.viewOnGithub,
       click: async () => {
-        await shell.openExternal('https://github.com/iprodanovbg/homeassistant-desktop');
+        await shell.openExternal('https://github.com/summerdream147/homeassistant-desktop-cn');
       },
     },
     {

@@ -2,9 +2,9 @@
   "name": "homeassistant-desktop-cn",
   "repository": {
     "type": "git",
-    "url": "https://github.com/iprodanovbg/homeassistant-desktop"
+    "url": "https://github.com/summerdream147/homeassistant-desktop-cn"
   },
-  "version": "1.5.3-cn",
+  "version": "1.6.0-cn",
   "description": "Home Assistant 桌面版 - 汉化优化版 (Windows / macOS / Linux)",
   "author": "Ivan Prodanov (汉化优化版)",
   "license": "Apache-2.0",

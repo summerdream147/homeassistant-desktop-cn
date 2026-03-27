@@ -1,5 +1,9 @@
 # Home Assistant Desktop - Chinese Version
 
+## Language Versions
+
+[中文](README.md)/English 
+
 This is a Chinese localized and Windows-optimized Home Assistant desktop client.
 
 ## Features
@@ -53,10 +57,3 @@ This project is based on [iprodanovbg/homeassistant-desktop](https://github.com/
 ## License
 
 Apache License 2.0
-
----
-
-## Language Versions
-
-- [Chinese README](README.md)
-- [English README](README_EN.md) (This file)
